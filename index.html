@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoadWatch — Live Road Safety Platform</title>
+  <meta name="description"
+    content="RoadWatch is a real-time road safety platform with live GPS tracking, pothole proximity alerts, AI severity detection, and safer route guidance for Indian roads." />
+  <meta name="theme-color" content="#0c0f1a" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/style.css?v=17" />
+
+  <!-- MarkerCluster CSS (must come after Leaflet CSS) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <!-- Favicon -->
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🛣️</text></svg>" />
+</head>
+
+<body>
+  <!-- ====== SPLASH SCREEN ====== -->
+  <div class="splash-screen" id="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <div class="splash-ring"></div>
+      </div>
+      <h1 class="splash-title">RoadWatch</h1>
+      <p class="splash-sub">Live Road Safety Platform</p>
+      <div class="splash-steps" id="splash-steps">Connecting to AI engine…</div>
+      <div class="splash-bar">
+        <div class="splash-bar-fill" id="splash-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="full-screen-map" class="full-screen-map"></div>
+  
+  <!-- ====== NAVBAR ====== -->
+  <nav class="navbar" id="navbar">
+    <a class="nav-brand" href="#" onclick="window.__nav&&window.__nav('home');return false;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+        <circle cx="12" cy="10" r="3" />
+      </svg>
+      RoadWatch
+      <span class="brand-dot"></span>
+    </a>
+
+    <div class="nav-live-pill" id="nav-live-pill">
+      <span class="nav-live-dot"></span>
+      <span class="nav-live-text">LIVE</span>
+    </div>
+
+    <!-- Main Navigation Links positioned next to brand -->
+    <ul class="nav-links" id="nav-links">
+      <li>
+        <button class="nav-link active" data-page="home">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          Home
+        </button>
+      </li>
+      <li>
+        <button class="nav-link" data-page="drive">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="3" width="15" height="13" rx="2"/>
+            <polygon points="16,8 22,12 16,16"/>
+            <line x1="5" y1="7" x2="5" y2="7.01"/>
+          </svg>
+          Drive
+        </button>
+      </li>
+      <li>
+        <button class="nav-link" data-page="detect">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          Detect
+        </button>
+      </li>
+      <li>
+        <button class="nav-link" data-page="report">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="16" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+          </svg>
+          Report
+        </button>
+      </li>
+      <li>
+        <button class="nav-link" data-page="risk-map">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+            <line x1="8" y1="2" x2="8" y2="18" />
+            <line x1="16" y1="6" x2="16" y2="22" />
+          </svg>
+          Live Map
+        </button>
+      </li>
+      <li>
+        <button class="nav-link" data-page="dashboard">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <line x1="3" y1="9" x2="21" y2="9" />
+            <line x1="9" y1="21" x2="9" y2="9" />
+          </svg>
+          Dashboard
+        </button>
+      </li>
+    </ul>
+
+    <!-- Controls wrapper positioned on the right -->
+    <div class="navbar-actions" id="navbar-actions">
+      <div class="toggle-group" id="rain-toggle-group">
+        <label class="switch">
+          <input type="checkbox" id="rain-mode-toggle" />
+          <span class="slider round"></span>
+        </label>
+        <span id="rain-status" class="toggle-label">
+          <span class="label-long">🌧 Rain Mode </span>
+          <span class="label-short">🌧 </span>
+          <span class="status-state">OFF</span>
+        </span>
+      </div>
+
+      <div id="drive-controls-container" class="drive-controls-container">
+        <button id="start-driving-btn" class="drive-toggle" title="Start Driving Mode">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3h18v4l-9 7-9-7V3z"/>
+            <path d="M3 13h18v8H3z"/>
+          </svg>
+          <span class="drive-text">🟢 Start Driving</span>
+        </button>
+
+        <div id="driving-active-status" class="driving-status-group" style="display: none; align-items: center; gap: 8px;">
+          <span class="status-active-badge">🟢 Driving Active</span>
+          <button id="stop-driving-btn" class="drive-toggle active" title="Stop Driving Mode">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3h18v4l-9 7-9-7V3z"/>
+              <path d="M3 13h18v8H3z"/>
+            </svg>
+            <span class="drive-text">🔴 Stop Driving</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button class="burger" id="burger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+  <div id="driving-status-panel" class="driving-status-panel"></div>
+
+  <!-- ====== RAIN OVERLAY ====== -->
+  <canvas id="rain-canvas" class="rain-canvas"></canvas>
+
+  <!-- ====== MAIN ====== -->
+  <main id="main-content"></main>
+
+  <!-- ====== FOOTER ====== -->
+  <footer class="site-footer" id="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <span>RoadWatch</span>
+      </div>
+      <p class="footer-tagline">Live road safety for Indian roads — real-time alerts, AI detection &amp; community reporting.</p>
+      <div class="footer-links">
+        <span>🛡️ Road Safety Initiative</span>
+        <span>•</span>
+        <span>Hyderabad, India</span>
+        <span>•</span>
+        <span>Open Source</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ====== SCRIPTS ====== -->
+  <!-- Leaflet JS (free, no API key) -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <!-- MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="js/data.js?v=17"></script>
+  <script src="js/sensor.js?v=17"></script>
+  <script src="js/ai-detect.js?v=17"></script>
+  <script src="js/map.js?v=17"></script>
+  <script src="js/app.js?v=17"></script>
+
+  <!-- Splash dismiss -->
+  <script>
+    (function () {
+      const splash = document.getElementById('splash-screen');
+      const bar    = document.getElementById('splash-bar-fill');
+      const steps  = document.getElementById('splash-steps');
+      const msgs   = ['Connecting to AI engine…','Loading pothole database…','Calibrating GPS…','Initializing camera…','Ready!'];
+      let pct = 0;
+      const iv = setInterval(() => {
+        pct = Math.min(pct + Math.random() * 22 + 8, 100);
+        if (bar)   bar.style.width   = pct + '%';
+        if (steps) steps.textContent = msgs[Math.min(Math.floor(pct / 25), msgs.length - 1)];
+        if (pct >= 100) {
+          clearInterval(iv);
+          setTimeout(() => {
+            if (splash) {
+              splash.classList.add('splash-out');
+              setTimeout(() => splash.parentNode && splash.remove(), 600);
+            }
+          }, 300);
+        }
+      }, 120);
+    })();
+  </script>
+
+</body>
+</html>
