@@ -3974,6 +3974,25 @@ input:checked + .slider::before {
   .navbar-actions {
     gap: 6px;
   }
+  .drive-text {
+    display: none !important;
+  }
+  .status-active-badge {
+    display: none !important;
+  }
+  .drive-toggle {
+    padding: 0 !important;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50% !important;
+  }
+  .drive-toggle svg {
+    margin-right: 0 !important;
+  }
+  .driving-status-group {
+    gap: 4px !important;
+  }
 }
 
 /* ============================================================

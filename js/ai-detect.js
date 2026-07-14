@@ -11,7 +11,7 @@
   const FOCAL_LENGTH_PX  = 600;
   const POTHOLE_REAL_H   = 0.15;
   const ALERT_COOLDOWN   = 15000;
-  const DETECT_INTERVAL  = 800;    // check every 800 ms (was 100 ms — too spammy)
+  const DETECT_INTERVAL  = 300;    // check every 300 ms (responsive UI)
   const MIN_CONFIDENCE   = 0.60;   // slightly higher bar for a detection to register
   const ROAD_SAMPLE_ROWS = 5;       // pixel rows to sample for road detection
   const ROAD_SAMPLE_COLS = 8;       // pixel cols to sample for road detection
@@ -201,14 +201,43 @@
   function runSimulatedInference(frameW, frameH) {
     const results = [];
 
-    // ~5% chance of a detection per 800 ms tick → roughly 3-4 detections/minute
-    if (Math.random() > 0.05) return results;
+    if (isDemoMode) {
+      // Find any pothole in the demo list that is in the viewport and not yet detected by the AI
+      const detectRangeMin = frameH * 0.55;
+      const detectRangeMax = frameH * 0.78;
+      
+      const target = demo.potholes.find(ph => 
+        !ph.detected && 
+        ph.y >= detectRangeMin && 
+        ph.y <= detectRangeMax
+      );
 
-    // Always exactly 1 detection per tick to avoid double-plotting
-    const xNorm = 0.25 + Math.random() * 0.50;   // center-ish horizontally
-    const yNorm = 0.50 + Math.random() * 0.35;   // lower half (road surface)
+      if (target) {
+        target.detected = true;
+        
+        // Return a detection centered on this visual pothole's current position
+        const boxW = target.w * (1.0 + (Math.random() - 0.5) * 0.15);
+        const boxH = target.h * (1.0 + (Math.random() - 0.5) * 0.15);
+        
+        results.push({
+          x: target.x,
+          y: target.y,
+          w: boxW,
+          h: boxH,
+          conf: target.conf,
+          severity: target.severity,
+          distM: estimateDistance(boxH, frameH)
+        });
+      }
+      return results;
+    }
 
-    // Realistic pothole size range
+    // Live mode: ~20% chance of a simulated detection per 300 ms tick
+    if (Math.random() > 0.20) return results;
+
+    const xNorm = 0.25 + Math.random() * 0.50;
+    const yNorm = 0.52 + Math.random() * 0.30;
+
     const sizeNorm = 0.06 + Math.random() * 0.14;
     const wh_ratio = 1.2 + Math.random() * 0.5;
 
@@ -217,7 +246,6 @@
     const h = sizeNorm * frameH;
     const w = h * wh_ratio;
 
-    // Confidence: realistic spread 60–95%
     const conf = 0.60 + Math.random() * 0.35;
     if (conf < MIN_CONFIDENCE) return results;
 
@@ -473,7 +501,7 @@
       const dets = runSimulatedInference(W, H);
 
       dets.forEach(d => {
-        activeBboxes.push({ ...d, ttl: 12 });
+        activeBboxes.push({ ...d, ttl: 8 }); // show for 8 ticks (~2.4 seconds)
         if (opts.onDetection) opts.onDetection(d);
         if (opts.enableVoice && (d.severity === 'dangerous' || d.severity === 'medium')) {
           speakAlert(d.severity, d.distM);
