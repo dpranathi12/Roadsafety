@@ -132,44 +132,43 @@
           </svg>
           Dashboard
         </button>
+      <li class="nav-actions-item">
+        <div class="navbar-actions" id="navbar-actions">
+          <div class="toggle-group" id="rain-toggle-group">
+            <label class="switch">
+              <input type="checkbox" id="rain-mode-toggle" />
+              <span class="slider round"></span>
+            </label>
+            <span id="rain-status" class="toggle-label">
+              <span class="label-long">🌧 Rain Mode </span>
+              <span class="label-short">🌧 </span>
+              <span class="status-state">OFF</span>
+            </span>
+          </div>
+
+          <div id="drive-controls-container" class="drive-controls-container">
+            <button id="start-driving-btn" class="drive-toggle" title="Start Driving Mode">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3h18v4l-9 7-9-7V3z"/>
+                <path d="M3 13h18v8H3z"/>
+              </svg>
+              <span class="drive-text">🟢 Start Driving</span>
+            </button>
+
+            <div id="driving-active-status" class="driving-status-group" style="display: none; align-items: center; gap: 8px;">
+              <span class="status-active-badge">🟢 Driving Active</span>
+              <button id="stop-driving-btn" class="drive-toggle active" title="Stop Driving Mode">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3h18v4l-9 7-9-7V3z"/>
+                  <path d="M3 13h18v8H3z"/>
+                </svg>
+                <span class="drive-text">🔴 Stop Driving</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </li>
     </ul>
-
-    <!-- Controls wrapper positioned on the right -->
-    <div class="navbar-actions" id="navbar-actions">
-      <div class="toggle-group" id="rain-toggle-group">
-        <label class="switch">
-          <input type="checkbox" id="rain-mode-toggle" />
-          <span class="slider round"></span>
-        </label>
-        <span id="rain-status" class="toggle-label">
-          <span class="label-long">🌧 Rain Mode </span>
-          <span class="label-short">🌧 </span>
-          <span class="status-state">OFF</span>
-        </span>
-      </div>
-
-      <div id="drive-controls-container" class="drive-controls-container">
-        <button id="start-driving-btn" class="drive-toggle" title="Start Driving Mode">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 3h18v4l-9 7-9-7V3z"/>
-            <path d="M3 13h18v8H3z"/>
-          </svg>
-          <span class="drive-text">🟢 Start Driving</span>
-        </button>
-
-        <div id="driving-active-status" class="driving-status-group" style="display: none; align-items: center; gap: 8px;">
-          <span class="status-active-badge">🟢 Driving Active</span>
-          <button id="stop-driving-btn" class="drive-toggle active" title="Stop Driving Mode">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 3h18v4l-9 7-9-7V3z"/>
-              <path d="M3 13h18v8H3z"/>
-            </svg>
-            <span class="drive-text">🔴 Stop Driving</span>
-          </button>
-        </div>
-      </div>
-    </div>
 
     <button class="burger" id="burger" aria-label="Toggle menu">
       <span></span><span></span><span></span>

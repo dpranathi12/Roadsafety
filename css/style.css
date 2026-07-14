@@ -343,11 +343,16 @@ button, input, select, textarea { font-family: inherit; }
   list-style: none;
 }
 
+.nav-actions-item {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
 .navbar-actions {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: auto;
 }
 
 .nav-link {
@@ -3963,7 +3968,6 @@ input:checked + .slider::before {
 @media (max-width: 768px) {
   .navbar {
     padding: 0 12px;
-    justify-content: space-between;
   }
   .nav-live-pill {
     display: none !important;
@@ -3971,27 +3975,56 @@ input:checked + .slider::before {
   .status-indicators {
     gap: 4px;
   }
-  .navbar-actions {
-    gap: 6px;
+  .nav-actions-item {
+    margin-left: 0 !important;
+    width: 100% !important;
+    margin-top: 16px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding-top: 16px !important;
+    display: flex !important;
   }
-  .drive-text {
+  .navbar-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 12px !important;
+  }
+  .navbar-actions .toggle-group,
+  .navbar-actions .drive-toggle,
+  .navbar-actions .driving-status-group {
+    width: 100% !important;
+    justify-content: center !important;
+    height: 44px !important;
+    border-radius: 22px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-sizing: border-box !important;
+  }
+  .navbar-actions .drive-toggle {
+    background: #22c55e !important;
+    border: none !important;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.3) !important;
+    padding: 0 16px !important;
+  }
+  .navbar-actions .drive-toggle.active {
+    background: #ef4444 !important;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3) !important;
+  }
+  .navbar-actions .drive-text {
+    display: inline !important;
+  }
+  .navbar-actions .label-long {
+    display: inline !important;
+  }
+  .navbar-actions .label-short {
     display: none !important;
   }
   .status-active-badge {
     display: none !important;
   }
-  .drive-toggle {
-    padding: 0 !important;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50% !important;
-  }
-  .drive-toggle svg {
-    margin-right: 0 !important;
-  }
-  .driving-status-group {
-    gap: 4px !important;
+  .burger {
+    display: flex !important;
+    margin-left: auto !important;
   }
 }
 
