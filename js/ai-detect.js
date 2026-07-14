@@ -110,21 +110,25 @@
         // Group values into buckets of 8 to check texture variance
         uniqueValues.add(Math.round(value / 8) * 8);
 
-        // Stricter grey check for asphalt/concrete
-        const isGrey = greyness > 0.82 && chroma < 18;
-        const isAsphalt   = isGrey && value >= 22 && value <= 110;
-        const isConcrete  = isGrey && value > 110 && value <= 180;
-        const isWhiteMark = r > 195 && g > 195 && b > 195 && chroma < 12;
-        const isYellowMark= r > 175 && g > 140 && b < 100 && chroma > 45 && r > g;
+        // Grey check for asphalt/concrete (relaxed for Indian roads)
+        const isGrey      = greyness > 0.75 && chroma < 28;
+        const isAsphalt   = isGrey && value >= 18 && value <= 120;      // dark tarmac / worn roads
+        const isConcrete  = isGrey && value > 120 && value <= 210;      // bright concrete (raised threshold)
+        const isWhiteMark = r > 195 && g > 195 && b > 195 && chroma < 15;
+        const isYellowMark= r > 175 && g > 140 && b < 110 && chroma > 35 && r > g;
+        // Indian roads: reddish-brown laterite / murrum surfaces
+        const isIndianRoad = r > 80 && r < 200 && g > 55 && g < 170 && b < 130
+                          && r > g && r > b && chroma < 55 && value < 200;
 
         // Rejection heuristics for indoor / non-road surfaces
-        const isSky   = b > r + 20 && b > g + 10 && value > 120;
-        const isWarm  = r > g + 12 || r > b + 12;   // indoor warm lights / wood furniture / skin
-        const isGreen = g > r + 15 && g > b + 8;    // grass / plants
-        const isTooBright = value > 215;             // reject glare / white walls or sheets
+        const isSky   = b > r + 25 && b > g + 15 && value > 130;
+        // Only reject very warm (strongly orange/red like skin, wood) — NOT Indian roads
+        const isWarm  = r > g + 35 && r > b + 35 && value > 80;
+        const isGreen = g > r + 20 && g > b + 12;    // grass / plants
+        const isTooBright = value > 240;              // reject only extreme glare / pure white
 
         if (!isSky && !isWarm && !isGreen && !isTooBright &&
-            (isAsphalt || isConcrete || isWhiteMark || isYellowMark)) {
+            (isAsphalt || isConcrete || isWhiteMark || isYellowMark || isIndianRoad)) {
           roadVotes++;
         }
         totalSamples++;
@@ -139,7 +143,7 @@
     const isUniform = uniqueValues.size <= 2;
 
     const confidence = roadVotes / totalSamples;
-    const isRoad     = confidence >= 0.35 && !isUniform;   // Stricter 35% threshold + variance gate
+    const isRoad     = confidence >= 0.22 && !isUniform;   // Relaxed 22% threshold + variance gate
     return { isRoad, confidence, reason: isRoad ? 'road_pixels_found' : 'insufficient_road_pixels' };
   }
 
@@ -439,6 +443,11 @@
 
     const ctx = canvasEl.getContext('2d');
 
+    // Fire initial road status so UI shows correct state immediately
+    if (opts.onRoadStatusChange) {
+      opts.onRoadStatusChange(roadDetected, roadDetected ? 1.0 : 0);
+    }
+
     function inferenceLoop() {
       if (!isRunning) return;
 
@@ -452,6 +461,7 @@
       const prevRoad   = roadDetected;
       roadDetected     = roadResult.isRoad;
 
+      // Fire callback whenever road status changes (or every 2 s to keep panel in sync)
       if (opts.onRoadStatusChange && roadDetected !== prevRoad) {
         opts.onRoadStatusChange(roadDetected, roadResult.confidence);
       }

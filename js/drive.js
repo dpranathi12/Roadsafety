@@ -60,7 +60,7 @@
     }
     requestAnimationFrame(processFrame);
   }
-  function showDriverAlert(distance,confidence){ if(alertDiv){ alertDiv.textContent=`⚠ Dangerous Pothole Ahead (${distance.toFixed(0)} m, ${Math.round(confidence*100)}% confidence)`; alertDiv.style.display='block'; setTimeout(()=>{alertDiv.style.display='none';},8000); } if('speechSynthesis'in window){ const utter=new SpeechSynthesisUtterance(`Warning! Dangerous pothole detected ${Math.round(distance)} meters ahead.`); utter.pitch=1; utter.rate=1; window.speechSynthesis.speak(utter); } }
+  function showDriverAlert(distance,confidence){ if(alertDiv){ alertDiv.textContent=`⚠ Dangerous Pothole Ahead (${distance.toFixed(0)} m, ${Math.round(confidence*100)}% confidence)`; alertDiv.style.display='block'; setTimeout(()=>{alertDiv.style.display='none';},8000); } if(window.driveVoiceEnabled && 'speechSynthesis' in window){ const utter=new SpeechSynthesisUtterance(`Warning! Dangerous pothole detected ${Math.round(distance)} meters ahead.`); utter.pitch=1; utter.rate=1; window.speechSynthesis.speak(utter); } }
   function attachGpsTracker(){ if(!navigator.geolocation) return; const watchId=navigator.geolocation.watchPosition(pos=>{ const {latitude,longitude,speed}=pos.coords; if(speed!=null){ const kmh=(speed*3.6).toFixed(0); if(speedSpan) speedSpan.textContent=`${kmh} km/h`; }
       if(AI.pendingDetections){ AI.pendingDetections.forEach(det=>{ det.lat=latitude; det.lng=longitude; if(window.RW_MAP&&typeof window.RW_MAP.plotAutoDetected==='function'){ window.RW_MAP.plotAutoDetected(null,det,{}); } }); AI.pendingDetections=[]; }
     }, err=>console.warn('GPS error',err),{enableHighAccuracy:true,maximumAge:2000,timeout:10000}); AI.gpsWatchId=watchId; }

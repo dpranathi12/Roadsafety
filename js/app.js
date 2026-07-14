@@ -39,7 +39,7 @@
   let driveGpsTracker   = null;
   let driveAiMarkers    = {};          // id → Leaflet marker
   let driveDetCount     = 0;
-  let driveVoiceEnabled = true;
+  let driveVoiceEnabled = false;
   let driveLastAlert    = 0;
   let driveDemoMode     = false;
   let driveStream       = null;        // MediaStream from camera
@@ -1251,7 +1251,7 @@
             <span class="drive-leg"><span class="drive-leg-dot" style="background:#A78BFA"></span>AI Auto</span>
           </div>
           <label class="drive-voice-toggle" title="Toggle voice alerts">
-            <input type="checkbox" id="drive-voice-chk" checked>
+            <input type="checkbox" id="drive-voice-chk">
             <span class="drive-voice-icon">🔊</span> Voice
           </label>
         </div>
@@ -1357,6 +1357,8 @@
     // ── Voice toggle ─────────────────────────────────────────
     document.getElementById('drive-voice-chk')?.addEventListener('change', e => {
       driveVoiceEnabled = e.target.checked;
+      window.driveVoiceEnabled = driveVoiceEnabled; // expose for drive.js
+      if (!driveVoiceEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
       showToast(driveVoiceEnabled ? '🔊 Voice alerts ON' : '🔇 Voice alerts OFF', 'info');
     });
 
@@ -1531,7 +1533,16 @@
         }
       }
 
-      // Start AI detection loop
+      // Immediately update the floating panel with the correct initial state
+      updateFloatingStatusPanel();
+
+      // Keep floating status panel in sync every 2 s (so status never gets stuck)
+      const panelRefreshInterval = setInterval(() => {
+        if (!driveActive) { clearInterval(panelRefreshInterval); return; }
+        updateFloatingStatusPanel();
+      }, 2000);
+
+      // Start AI detection loop (fires onRoadStatusChange immediately with initial state)
       AI.startDetection(isDemo ? null : document.getElementById('drive-video'), overlayCanvas, {
         demoMode:    isDemo,
         onDetection,
@@ -1542,10 +1553,10 @@
           const el = document.getElementById('hud-ai-status');
           if (el) {
             if (isRoad) {
-              el.textContent = '🟢 ACTIVE';
+              el.textContent = '\uD83D\uDFE2 ACTIVE';
               el.style.color = '';
             } else {
-              el.textContent = '⚠️ NO ROAD';
+              el.textContent = '\u26A0\uFE0F NO ROAD';
               el.style.color = '#f87171';
             }
           }
