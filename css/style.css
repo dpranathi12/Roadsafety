@@ -4268,16 +4268,53 @@ input:checked + .slider::before {
   }
   /* Adjust top of alert banner and status panel on mobile to avoid overlapping logo */
   .page--drive.driving-active .drive-alert-banner {
-    top: 70px;
-    right: 10px;
-    width: calc(100% - 20px);
-    max-width: 320px;
+    top: 70px !important;
+    right: 10px !important;
+    width: calc(100% - 20px) !important;
+    max-width: 320px !important;
+    padding: 10px 14px !important;
+  }
+  .page--drive.driving-active .drive-cam-wrap {
+    top: 10px !important;
+    left: 10px !important;
+    width: 200px !important;
+    height: 120px !important;
+    border-radius: 12px !important;
   }
   .driving-status-panel {
-    top: 260px; /* shift down under PIP on small screens */
-    left: 10px;
-    width: calc(100% - 20px);
-    max-width: 260px;
+    top: 140px !important; /* directly below mobile PIP camera */
+    left: 10px !important;
+    width: 200px !important;
+    padding: 10px !important;
+    border-radius: 12px !important;
+  }
+  .driving-status-panel .panel-stat {
+    font-size: 0.72rem !important;
+    margin-bottom: 4px !important;
+    padding-bottom: 4px !important;
+  }
+  .driving-status-panel .panel-mode-badge {
+    padding: 2px 6px !important;
+    font-size: 0.65rem !important;
+    margin-bottom: 8px !important;
+  }
+  .page--drive.driving-active .drive-hud-strip {
+    min-width: 0 !important;
+    width: calc(100% - 20px) !important;
+    left: 10px !important;
+    transform: none !important;
+    bottom: 15px !important;
+    padding: 8px 10px !important;
+    border-radius: 12px !important;
+  }
+  .page--drive.driving-active .drive-hud-val {
+    font-size: 1.0rem !important;
+  }
+  .page--drive.driving-active .drive-hud-label {
+    font-size: 0.5rem !important;
+  }
+  .page--drive.driving-active .drive-hud-divider {
+    height: 24px !important;
   }
 }
 
