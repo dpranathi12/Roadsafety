@@ -1363,6 +1363,9 @@
     });
 
     // ── On each AI detection ──────────────────────────────────
+    const MAX_AI_MARKERS = 12;   // cap markers on map to prevent flooding
+    let lastMapPlotTime  = 0;    // cooldown: don't re-plot same area < 30 s
+
     function onDetection(det) {
       if (!driveActive) return;
       driveDetCount++;
@@ -1401,33 +1404,53 @@
         showAlert(tempP, Math.round(det.distM));
       }
 
-      // Auto-map the detection (or merge with existing)
-      const lat = userLat ? userLat + (Math.random() - 0.5) * 0.0008 : 17.335 + (Math.random() - 0.5) * 0.002;
-      const lng = userLng ? userLng + (Math.random() - 0.5) * 0.0008 : 78.452 + (Math.random() - 0.5) * 0.002;
+      // Throttle map plotting: skip if last plot was < 30 s ago AND we already have enough markers
+      const now = Date.now();
+      const aiMarkerCount = Object.keys(driveAiMarkers).length;
+      if (aiMarkerCount >= MAX_AI_MARKERS && now - lastMapPlotTime < 30000) return;
 
-      const merged = D.mergeDetection(lat, lng, 15, det.conf);
-      if (!merged) {
-        // New pothole — add to data + map
-        const entry = D.addPothole({
-          lat, lng,
-          severity:    det.severity,
-          rainHazard:  false,
-          reporter:    'AI Camera',
-          reporterCount: 1,
-          description: `AI detected ${det.severity} pothole. Confidence: ${Math.round(det.conf * 100)}%. Distance: ${Math.round(det.distM)}m ahead.`,
-          source:      'ai',
-          confidence:  det.conf,
-          aiVerified:  true,
-        });
+      // Tight scatter: ±0.00009° ≈ ±10 m so nearby detections merge into existing points
+      const scatter = 0.00009;
+      const lat = userLat ? userLat + (Math.random() - 0.5) * scatter
+                          : 17.335 + (Math.random() - 0.5) * 0.001;
+      const lng = userLng ? userLng + (Math.random() - 0.5) * scatter
+                          : 78.452 + (Math.random() - 0.5) * 0.001;
 
-        if (driveMap) {
-          // Use animated single-marker plot for newly detected potholes
-          const m = M.plotSingleAnimated(driveMap, entry, {
-            userLat, userLng, onMarkerClick: () => {},
-          });
-          if (m) driveAiMarkers[entry.id] = m;
+      // Merge radius 40 m — much more likely to merge with existing potholes
+      const merged = D.mergeDetection(lat, lng, 40, det.conf);
+      if (merged) return; // merged into existing — no new marker needed
+
+      // Cap total AI markers on map
+      if (aiMarkerCount >= MAX_AI_MARKERS) {
+        // Remove oldest AI marker to make room
+        const oldestId = Object.keys(driveAiMarkers)[0];
+        if (driveMap && driveAiMarkers[oldestId]) {
+          driveMap.removeLayer(driveAiMarkers[oldestId]);
+          delete driveAiMarkers[oldestId];
         }
       }
+
+      // New pothole — add to data + map
+      const entry = D.addPothole({
+        lat, lng,
+        severity:    det.severity,
+        rainHazard:  false,
+        reporter:    'AI Camera',
+        reporterCount: 1,
+        description: `AI detected ${det.severity} pothole. Confidence: ${Math.round(det.conf * 100)}%. Distance: ${Math.round(det.distM)}m ahead.`,
+        source:      'ai',
+        confidence:  det.conf,
+        aiVerified:  true,
+      });
+
+      lastMapPlotTime = now;
+      if (driveMap) {
+        const m = M.plotSingleAnimated(driveMap, entry, {
+          userLat, userLng, onMarkerClick: () => {},
+        });
+        if (m) driveAiMarkers[entry.id] = m;
+      }
+
       // Update page title for hackathon demo visibility
       document.title = `⚠ ${det.severity.toUpperCase()} POTHOLE ${Math.round(det.distM)}m — RoadWatch AI`;
     }

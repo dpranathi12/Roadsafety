@@ -10,9 +10,9 @@
   // ── Constants ──────────────────────────────────────────────
   const FOCAL_LENGTH_PX  = 600;
   const POTHOLE_REAL_H   = 0.15;
-  const ALERT_COOLDOWN   = 8000;
-  const DETECT_INTERVAL  = 100;
-  const MIN_CONFIDENCE   = 0.55;
+  const ALERT_COOLDOWN   = 15000;
+  const DETECT_INTERVAL  = 800;    // check every 800 ms (was 100 ms — too spammy)
+  const MIN_CONFIDENCE   = 0.60;   // slightly higher bar for a detection to register
   const ROAD_SAMPLE_ROWS = 5;       // pixel rows to sample for road detection
   const ROAD_SAMPLE_COLS = 8;       // pixel cols to sample for road detection
 
@@ -201,35 +201,30 @@
   function runSimulatedInference(frameW, frameH) {
     const results = [];
 
-    // Probability of a detection on this frame (~20 % per tick, 100 ms ticks)
-    if (Math.random() > 0.20) return results;
+    // ~5% chance of a detection per 800 ms tick → roughly 3-4 detections/minute
+    if (Math.random() > 0.05) return results;
 
-    // Number of detections: mostly 1, sometimes 2
-    const count = Math.random() < 0.15 ? 2 : 1;
+    // Always exactly 1 detection per tick to avoid double-plotting
+    const xNorm = 0.25 + Math.random() * 0.50;   // center-ish horizontally
+    const yNorm = 0.50 + Math.random() * 0.35;   // lower half (road surface)
 
-    for (let i = 0; i < count; i++) {
-      // Potholes appear in the lower-center region of frame (road ahead)
-      const xNorm = 0.2 + Math.random() * 0.6;
-      const yNorm = 0.45 + Math.random() * 0.40;   // bottom half
+    // Realistic pothole size range
+    const sizeNorm = 0.06 + Math.random() * 0.14;
+    const wh_ratio = 1.2 + Math.random() * 0.5;
 
-      // Size varies by apparent distance (farther = smaller)
-      const sizeNorm = 0.05 + Math.random() * 0.18;
-      const wh_ratio = 1.1 + Math.random() * 0.6;
+    const x = xNorm * frameW;
+    const y = yNorm * frameH;
+    const h = sizeNorm * frameH;
+    const w = h * wh_ratio;
 
-      const x = xNorm * frameW;
-      const y = yNorm * frameH;
-      const h = sizeNorm * frameH;
-      const w = h * wh_ratio;
+    // Confidence: realistic spread 60–95%
+    const conf = 0.60 + Math.random() * 0.35;
+    if (conf < MIN_CONFIDENCE) return results;
 
-      // Confidence: weighted toward 75–95 % for realism
-      const conf = 0.55 + Math.random() * 0.43;
-      if (conf < MIN_CONFIDENCE) continue;
+    const severity = severityFromConf(conf);
+    const distM    = estimateDistance(h, frameH);
 
-      const severity = severityFromConf(conf);
-      const distM    = estimateDistance(h, frameH);
-
-      results.push({ x, y, w, h, conf, severity, distM });
-    }
+    results.push({ x, y, w, h, conf, severity, distM });
     return results;
   }
 
