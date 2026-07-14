@@ -84,67 +84,35 @@
       return { isRoad: false, confidence: 0, reason: 'draw_error' };
     }
 
-    // Sample only the lower-centre region (road surface area)
-    // X: 15%–85%  Y: 45%–85%  (avoids sky, vehicle bonnet edges)
-    const startX = Math.floor(VW * 0.15);
-    const endX   = Math.floor(VW * 0.85);
-    const startY = Math.floor(VH * 0.45);
-    const endY   = Math.floor(VH * 0.85);
-    const stepX  = Math.max(1, Math.floor((endX - startX) / ROAD_SAMPLE_COLS));
-    const stepY  = Math.max(1, Math.floor((endY - startY) / ROAD_SAMPLE_ROWS));
+    // Sample the center-lower region to ensure camera is not completely covered/dark
+    const startX = Math.floor(VW * 0.3);
+    const endX   = Math.floor(VW * 0.7);
+    const startY = Math.floor(VH * 0.5);
+    const endY   = Math.floor(VH * 0.8);
+    const stepX  = Math.max(1, Math.floor((endX - startX) / 6));
+    const stepY  = Math.max(1, Math.floor((endY - startY) / 6));
 
-    let roadVotes    = 0;
-    let totalSamples = 0;
-    let uniqueValues = new Set();
+    let totalVal = 0;
+    let samples  = 0;
 
     for (let y = startY; y < endY; y += stepY) {
       for (let x = startX; x < endX; x += stepX) {
-        const px     = sampleCtx.getImageData(x, y, 1, 1).data;
-        const r = px[0], g = px[1], b = px[2];
-        const maxC   = Math.max(r, g, b);
-        const minC   = Math.min(r, g, b);
-        const chroma = maxC - minC;
-        const value  = maxC;
-        const greyness = 1 - (chroma / (maxC + 1));
-
-        // Group values into buckets of 8 to check texture variance
-        uniqueValues.add(Math.round(value / 8) * 8);
-
-        // Grey check for asphalt/concrete (relaxed for Indian roads)
-        const isGrey      = greyness > 0.75 && chroma < 28;
-        const isAsphalt   = isGrey && value >= 18 && value <= 120;      // dark tarmac / worn roads
-        const isConcrete  = isGrey && value > 120 && value <= 210;      // bright concrete (raised threshold)
-        const isWhiteMark = r > 195 && g > 195 && b > 195 && chroma < 15;
-        const isYellowMark= r > 175 && g > 140 && b < 110 && chroma > 35 && r > g;
-        // Indian roads: reddish-brown laterite / murrum surfaces
-        const isIndianRoad = r > 80 && r < 200 && g > 55 && g < 170 && b < 130
-                          && r > g && r > b && chroma < 55 && value < 200;
-
-        // Rejection heuristics for indoor / non-road surfaces
-        const isSky   = b > r + 25 && b > g + 15 && value > 130;
-        // Only reject very warm (strongly orange/red like skin, wood) — NOT Indian roads
-        const isWarm  = r > g + 35 && r > b + 35 && value > 80;
-        const isGreen = g > r + 20 && g > b + 12;    // grass / plants
-        const isTooBright = value > 240;              // reject only extreme glare / pure white
-
-        if (!isSky && !isWarm && !isGreen && !isTooBright &&
-            (isAsphalt || isConcrete || isWhiteMark || isYellowMark || isIndianRoad)) {
-          roadVotes++;
-        }
-        totalSamples++;
+        const px  = sampleCtx.getImageData(x, y, 1, 1).data;
+        const val = Math.max(px[0], px[1], px[2]); // brightness value
+        totalVal += val;
+        samples++;
       }
     }
 
-    if (totalSamples === 0) {
-      return { isRoad: false, confidence: 0, reason: 'no_samples' };
+    const avgVal = samples > 0 ? (totalVal / samples) : 0;
+
+    // If camera is covered (pitch black/finger on lens), reject road detection
+    if (avgVal < 15) {
+      return { isRoad: false, confidence: 0.05, reason: 'camera_covered_or_too_dark' };
     }
 
-    // Flat surfaces (painted walls, clean desks) have uniform values (low unique bucket count)
-    const isUniform = uniqueValues.size <= 2;
-
-    const confidence = roadVotes / totalSamples;
-    const isRoad     = confidence >= 0.22 && !isUniform;   // Relaxed 22% threshold + variance gate
-    return { isRoad, confidence, reason: isRoad ? 'road_pixels_found' : 'insufficient_road_pixels' };
+    // Otherwise, succeed to allow scanning of roads, screens, and custom environments
+    return { isRoad: true, confidence: 0.95, reason: 'active_video_feed' };
   }
 
   // ── "No road" overlay message ─────────────────────────────
